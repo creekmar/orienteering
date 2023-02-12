@@ -26,3 +26,17 @@ def elevation(filename, width, length):
         if length > (count+1):
             sys.exit("Elevation file length is too short to be used for the given terrain image")
     return elev_coor
+
+def dest(filename):
+    """
+    Given a filename, will read the coordinates in the file and
+    return it as a list of tuples. These represent the coor
+    to start and visit/end
+    :param filename:
+    :return: list of 2 element tuples (coor)
+    """
+    goals = list()
+    with open(filename) as p:
+        for line in p:
+            goals.append(tuple(line.split()))
+    return goals

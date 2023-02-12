@@ -36,46 +36,56 @@ def get_terrain_speed(terrain, x, y):
             color_string += hex_num
     return colorset[color_string]
 
-def get_g_estimate(terrain, elev, x1, y1, x2, y2):
+def get_g_estimate(terrain, elev, coor1, coor2):
     """
     Given the Pixel Access Object, elevation file, and two coordinates,
     it will get a g_estimate from the first coor to the second
     coordinate. The g_estimate is the terrain speed * the distance
     :param terrain: Pixel Access Objet
     :param elev: the elevation coordinate 2D array
-    :param row1: first coordinate
-    :param col1:
-    :param row2: second coordinate
-    :param col2:
+    :param coor1: first coordinate
+    :param coor2: second coordinate
     :return: g-cost which is speed*distance between two coor
     """
-
-    z_dist = elev[x1][y1] - elev[x2][y2]
+    x1 = coor1[0]
+    x2 = coor2[0]
+    y1 = coor1[1]
+    y2 = coor2[1]
+    # can we even move to area
     speed = get_terrain_speed(terrain, x2, y2)
+    if speed == -1:
+        return -1
+
+    z_dist = math.fabs(elev[x1][y1] - elev[x2][y2])
     if (y2 - y1) != 0:
         distance = math.sqrt(y_dist**2 + z_dist**2)
     else:
         distance = math.sqrt(x_dist**2 + z_dist**2)
     return speed*distance
 
-def get_h_estimate(terrain, elev, currx, curry, endx, endy):
+def get_h_estimate(terrain, elev, curr, end):
     """
     Given a Pixel Access Image, elevation file, and start and end
     coor, will return the h-estimate, from the current coor to
     the goal coor. The h-estimate is the distance * speed
     :param terrain: Pixel Access Image
     :param elev: 2D array of elevation values
-    :param currx: current coor
-    :param curry:
-    :param endx: goal coor
-    :param endy:
+    :param curr: current coor
+    :param end: goal coor
     :return: the h-estimate from current coor to goal coor
     """
+    currx = curr[0]
+    curry = curr[1]
+    endx = end[0]
+    endy = end[1]
+    # can we even get to pixel
+    speed = get_terrain_speed(terrain, currx, curry)
+    if speed == -1:
+        return -1
     # getting base x,y,z distances
-    x_dif = (endx-currx)*x_dist
-    y_dif = (endy-curry)*y_dist
-    z_dif = (elev[currx][curry]-elev[endx][endy])
+    x_dif = math.fabs((endx-currx)*x_dist)
+    y_dif = math.fabs((endy-curry)*y_dist)
+    z_dif = math.fabs((elev[currx][curry]-elev[endx][endy]))
 
     distance = math.sqrt(x_dif**2 + y_dif**2 + z_dif**2)
-    speed = get_terrain_speed(terrain, currx, curry)
     return speed*distance
