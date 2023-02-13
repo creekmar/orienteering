@@ -38,5 +38,5 @@ def dest(filename):
     goals = list()
     with open(filename) as p:
         for line in p:
-            goals.append(tuple(line.split()))
+            goals.append(tuple(int(n) for n in line.split()))
     return goals

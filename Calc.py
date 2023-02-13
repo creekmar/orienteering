@@ -8,8 +8,8 @@ on a map, considering the terrain and elevation
 
 import math
 
-colorset = {"f89412": 5, "ffc000": 10, "ffffff": 20, "02d03c": 30,
-                   "028828": 50, "054918": -1, "0000ff": 100, "473303": 5, "000000": 5,
+colorset = {"f89412": 5, "ffc000": 200, "ffffff": 400, "02d03c": 600,
+                   "028828": 1000, "054918": -1, "0000ff": 2000, "473303": 5, "000000": 5,
                    "cd0065": -1}
 x_dist = 10.29
 y_dist = 7.55
@@ -36,6 +36,25 @@ def get_terrain_speed(terrain, x, y):
             color_string += hex_num
     return colorset[color_string]
 
+def get_distance(elev, coor1, coor2):
+    """
+    gets the straight-line distance between coor1 and coor2
+    :param elev: 2D array of elevation
+    :param coor1:
+    :param coor2:
+    :return:
+    """
+    x1 = coor1[1]
+    x2 = coor2[1]
+    y1 = coor1[0]
+    y2 = coor2[0]
+    z_dist = math.fabs(elev[x1][y1] - elev[x2][y2])
+    if (y2 - y1) != 0:
+        distance = math.sqrt(y_dist ** 2 + z_dist ** 2)
+    else:
+        distance = math.sqrt(x_dist ** 2 + z_dist ** 2)
+    return distance
+
 def get_g_estimate(terrain, elev, coor1, coor2):
     """
     Given the Pixel Access Object, elevation file, and two coordinates,
@@ -47,20 +66,14 @@ def get_g_estimate(terrain, elev, coor1, coor2):
     :param coor2: second coordinate
     :return: g-cost which is speed*distance between two coor
     """
-    x1 = coor1[0]
-    x2 = coor2[0]
-    y1 = coor1[1]
-    y2 = coor2[1]
+    x2 = coor2[1]
+    y2 = coor2[0]
     # can we even move to area
-    speed = get_terrain_speed(terrain, x2, y2)
+    speed = get_terrain_speed(terrain, y2, x2)
     if speed == -1:
         return -1
 
-    z_dist = math.fabs(elev[x1][y1] - elev[x2][y2])
-    if (y2 - y1) != 0:
-        distance = math.sqrt(y_dist**2 + z_dist**2)
-    else:
-        distance = math.sqrt(x_dist**2 + z_dist**2)
+    distance = get_distance(elev, coor1, coor2)
     return speed*distance
 
 def get_h_estimate(terrain, elev, curr, end):
@@ -74,18 +87,18 @@ def get_h_estimate(terrain, elev, curr, end):
     :param end: goal coor
     :return: the h-estimate from current coor to goal coor
     """
-    currx = curr[0]
-    curry = curr[1]
-    endx = end[0]
-    endy = end[1]
+    currx = curr[1]
+    curry = curr[0]
+    endx = end[1]
+    endy = end[0]
     # can we even get to pixel
-    speed = get_terrain_speed(terrain, currx, curry)
+    speed = get_terrain_speed(terrain, curry, currx)
     if speed == -1:
         return -1
     # getting base x,y,z distances
-    x_dif = math.fabs((endx-currx)*x_dist)
-    y_dif = math.fabs((endy-curry)*y_dist)
+    x_dif = math.fabs(endx-currx)
+    y_dif = math.fabs(endy-curry)
     z_dif = math.fabs((elev[currx][curry]-elev[endx][endy]))
 
-    distance = math.sqrt(x_dif**2 + y_dif**2 + z_dif**2)
-    return speed*distance
+    distance = math.sqrt(x_dif**2 + y_dif**2 + z_dif**2)/4
+    return distance

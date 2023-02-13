@@ -1,6 +1,16 @@
-
-from dataclasses import dataclass
+"""
+Ming Creekmore
+Node class for A* search of orienteering map.
+coor: the coordinates of the node
+g: the g-cost
+h: the estimated h-cost
+f: g+h
+parent: the string of the parent
+distance: the distance traveled to get to the node from
+    starting point in meters
+"""
 from __future__ import annotations
+from dataclasses import dataclass
 import Calc
 
 @dataclass
@@ -9,40 +19,52 @@ class node:
     g: float
     h: float
     f: float
-    parent: node
+    parent: int
+    distance: float
 
     def get_sucessors(self, terrain, elev, width, length, end):
-        successors = list()
-        x = node.coor[0]
-        y = node.coor[1]
+        successors = set()
+        x = self.coor[0]
+        y = self.coor[1]
         if (x - 1) > -1:
-            g = Calc.get_g_estimate(terrain, elev, node.coor, (x - 1, y))
+            dist = Calc.get_distance(elev, self.coor, (x - 1, y))
+            g = Calc.get_g_estimate(terrain, elev, self.coor, (x - 1, y))
             if g != -1:
                 h = Calc.get_h_estimate(terrain, elev, (x - 1, y), end)
-                successors.append(node((x - 1, y), g, h, g+h, self))
+                if end[0] - x > 0:
+                    h += 50
+                successors.add(node((x - 1, y), g, h, g+h, self.__hash__(), dist))
         if (y - 1) > -1:
-            g = Calc.get_g_estimate(terrain, elev, node.coor, (x - 1, y))
+            dist = Calc.get_distance(elev, self.coor, (x, y - 1))
+            g = Calc.get_g_estimate(terrain, elev, self.coor, (x, y - 1))
             if g != -1:
                 h = Calc.get_h_estimate(terrain, elev, (x, y - 1), end)
-                successors.append(node((x, y - 1), g, h, g + h, self))
+                if end[1] - y > 0:
+                    h += 50
+                successors.add(node((x, y - 1), g, h, g + h, self.__hash__(), dist))
         if (x + 1) < width:
-            g = Calc.get_g_estimate(terrain, elev, node.coor, (x + 1, y))
+            dist = Calc.get_distance(elev, self.coor, (x + 1, y))
+            g = Calc.get_g_estimate(terrain, elev, self.coor, (x + 1, y))
             if g != -1:
                 h = Calc.get_h_estimate(terrain, elev, (x + 1, y), end)
-                successors.append(node((x + 1, y), g, h, g + h, self))
+                if end[0] - x < 0:
+                    h += 50
+                successors.add(node((x + 1, y), g, h, g + h, self.__hash__(), dist))
         if (y + 1) < length:
-            g = Calc.get_g_estimate(terrain, elev, node.coor, (x, y + 1))
+            dist = Calc.get_distance(elev, self.coor, (x, y + 1))
+            g = Calc.get_g_estimate(terrain, elev, self.coor, (x, y + 1))
             if g != -1:
                 h = Calc.get_h_estimate(terrain, elev, (x, y + 1), end)
-                successors.append(node((x, y + 1), g, h, g + h, self))
+                if end[1] - y > 0:
+                    h += 50
+                successors.add(node((x, y + 1), g, h, g + h, self.__hash__(), dist))
         return successors
 
     def __eq__(self, other):
         if not isinstance(other, node):
             # don't attempt to compare against unrelated types
             return NotImplemented
-
         return self.coor == other.coor
 
     def __hash__(self):
-        return str(self.coor)
+        return self.coor[0]**2 + self.coor[1]**3
