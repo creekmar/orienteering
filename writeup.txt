@@ -1,0 +1,14 @@
+Ming Creekmore
+mec5765
+
+The g function was implemented by calculating the meter distance between
+one pixel to the next and multiplying it by the terrain speed
+The h function is the distance from the current coordinate to the goal
+coordinate divided by the terrain speed of the current coordinate. An
+extra 50 is added if the direction is the "wrong" way
+
+This is probably not admissible
+h(x) should not be greater than c(x) since the division, however
+I'm not sure that is the case, since I am multiplying the distance
+times the speed and then dividing it by 4. If we go into a lake, but
+only for a little bit, then the h-cost would be way too high.

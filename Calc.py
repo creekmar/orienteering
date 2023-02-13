@@ -8,8 +8,8 @@ on a map, considering the terrain and elevation
 
 import math
 
-colorset = {"f89412": 5, "ffc000": 200, "ffffff": 400, "02d03c": 600,
-                   "028828": 1000, "054918": -1, "0000ff": 2000, "473303": 5, "000000": 5,
+colorset = {"f89412": 5, "ffc000": 14, "ffffff": 8, "02d03c": 10,
+                   "028828": 20, "054918": -1, "0000ff": 2000, "473303": 5, "000000": 5,
                    "cd0065": -1}
 x_dist = 10.29
 y_dist = 7.55
@@ -100,5 +100,5 @@ def get_h_estimate(terrain, elev, curr, end):
     y_dif = math.fabs(endy-curry)
     z_dif = math.fabs((elev[currx][curry]-elev[endx][endy]))
 
-    distance = math.sqrt(x_dif**2 + y_dif**2 + z_dif**2)/4
+    distance = math.sqrt(x_dif**2 + y_dif**2 + z_dif**2)*speed/4
     return distance

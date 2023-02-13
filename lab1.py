@@ -6,6 +6,7 @@ Perform A* search to find the shortest distance between two places on a map
 
 from dataclasses import dataclass
 from operator import attrgetter
+import time
 
 from PIL import Image
 import sys
@@ -39,46 +40,48 @@ def a_star(terrain, elev, start, goal, width, length):
     :param length:
     :return:
     """
-    frontier = list()
+    frontier = dict()
     visited = dict()
     found = False
     start_h = Calc.get_h_estimate(terrain, elev, start, goal)
     temp_node = Node.node(start, 0, start_h, start_h, -1, 0)
-    frontier.append(temp_node)
+    frontier[temp_node.__hash__()] = temp_node
 
     while len(frontier) > 0:
-        current = min(frontier, key=attrgetter('f'))
-        frontier.remove(current)
+        current = min(frontier.values(), key=attrgetter('f'))
+        frontier.pop(current.__hash__())
         if current.coor == goal:
             found = True
             break
         successors = current.get_sucessors(terrain, elev, width, length, goal)
+        # add successor if not in frontier and not in visited
+        # update cost values if a successor is in frontier and f is less
         for step in successors:
             if step.__hash__() not in visited:
-                print(step)
-                if step in frontier:
-                    other = frontier.pop(frontier.index(step))
+                if step.__hash__() in frontier:
+                    other = frontier.pop(step.__hash__())
                     if step.f < other.f:
-                        frontier.append(step)
+                        frontier[step.__hash__()] = step
                     else:
-                        frontier.append(other)
+                        frontier[step.__hash__()] = other
                 else:
-                    frontier.append(step)
+                    frontier[step.__hash__()] = step
         visited[current.__hash__()] = current
     # edit map with solution path if found
     distance = 0
     if found:
+        path = []
         while current.parent != -1:
-            terrain[current.coor[0], current.coor[1]] = (153, 50, 204)
+            path.append(current)
             distance += current.distance
             current = visited[current.parent]
-        terrain[current.coor[0], current.coor[1]] = (153, 50, 204)
+        path.append(current)
         distance += current.distance
-    return distance
+    return distance, path
 
 def main():
+    start_time = time.time()
     if len(sys.argv) == 5:
-        print("Wow! You gave the correct arguments.")
         #read_terrain(sys.argv[1])
         with Image.open(sys.argv[1]) as ter:
             dim = ter.size
@@ -87,17 +90,28 @@ def main():
             terrain = ter.load()
         elev_coor = elevation(sys.argv[2], width, length)
         dest = Read.dest(sys.argv[3])
+        dist = 0
+        path = []
         for i in range(len(dest)-1):
-            dist = a_star(terrain, elev_coor, dest[i], dest[i+1], width, length)
-            if dist != 0:
-                ter.save(sys.argv[4])
-                ter.show()
-                print("Distance:", dist, "m")
-            else:
-                print("No Solution!")
+            if(len(dest[i+1]) != 2):
+                break
+            sol = a_star(terrain, elev_coor, dest[i], dest[i+1], width, length)
+            dist += sol[0]
+            path.extend(sol[1])
+        if dist != 0:
+            for i in range(len(path)):
+                terrain[path[i].coor[0], path[i].coor[1]] = (153, 50, 204)
+            # for i in range(len(dest)):
+            #     terrain[dest[i][0], dest[i][1]] = (153, 50, 204)
+            ter.save(sys.argv[4])
+            ter.show()
+            print("Distance:", dist, "m")
+        else:
+            print("No Solution!")
 
     else:
         print("Usage: lab1.py terrain-image elevation-file path-file output-image-filename")
+    print("Time elapsed:",time.time() - start_time)
 
 
 if __name__ == '__main__':
